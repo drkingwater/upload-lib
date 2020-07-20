@@ -1,0 +1,63 @@
+import org.gradle.api.internal.artifacts.publish.DefaultPublishArtifact
+
+//导入类
+apply plugin: 'maven'
+
+//测试环境支付库版本
+def PAY_DEVP = [
+        groupId   : 'me.pxq.lib.pay',
+        artifactId: 'devp',
+        version   : '1.0.2'
+]
+
+//正式环境支付库版本
+def PAY_PROD = [
+        groupId   : 'me.pxq.lib.pay',
+        artifactId: 'prod',
+        version   : '1.0.1'
+]
+
+configurations {
+    devpArchives
+    prodArchives
+}
+//配置要上传的文件信息
+artifacts {
+    //要上传的aar文件配置，其中File()要根据具体生成的aar修改
+    prodArchives new DefaultPublishArtifact("pro", "aar", "aar", null, new Date(), new File("build/outputs/aar", "pay-prod-release.aar"))
+    devpArchives new DefaultPublishArtifact("dev", "aar", "aar", null, new Date(), new File("build/outputs/aar", "pay-devp-release.aar"))
+}
+
+//上传调试版aar 上传前执行：assembleDevpRelease
+task uploadDev(type: Upload, group: "upload", dependsOn: 'assembleDevpRelease') {
+
+    setConfiguration(project.configurations.getByName("devpArchives"))
+    repositories.mavenDeployer {
+        //配置pom信息
+        pom.groupId = PAY_DEVP.groupId
+        pom.artifactId = PAY_DEVP.artifactId
+        pom.version = PAY_DEVP.version
+        //nexus远程仓库路径，这里上传到本地
+        repository(url: uri("$rootDir/repos")) {
+
+        }
+
+    }
+}
+
+//上传正式版aar 上传前执行：assembleProdRelease
+task uploadPro(type: Upload, group: "upload", dependsOn: 'assembleProdRelease') {
+
+    setConfiguration(project.configurations.getByName("prodArchives"))
+    repositories.mavenDeployer {
+        //配置pom信息
+        pom.groupId = PAY_PROD.groupId
+        pom.artifactId = PAY_PROD.artifactId
+        pom.version = PAY_PROD.version
+        //nexus远程仓库路径，这里上传到本地
+        repository(url: uri("$rootDir/repos")) {
+
+        }
+
+    }
+}

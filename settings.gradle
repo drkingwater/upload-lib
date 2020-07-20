@@ -1,0 +1,3 @@
+include ':lib:pay'
+include ':app'
+rootProject.name = "UploadLib"
